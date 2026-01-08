@@ -46,3 +46,13 @@ def create_user(user: UserCreate):
         "user": response.data
     }
 
+@app.get("/users")
+def get_users():
+    response = supabase.table("users").select("*").execute()
+
+    return {
+        "success": True,
+        "users": response.data
+    }
+
+
