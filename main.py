@@ -55,4 +55,19 @@ def get_users():
         "users": response.data
     }
 
+from fastapi import HTTPException
+
+@app.get("/users/{user_id}")
+def get_user_by_id(user_id: str):
+    response = supabase.table("users").select("*").eq("id", user_id).execute()
+
+    if not response.data:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    return {
+        "success": True,
+        "user": response.data[0]
+    }
+
+
 
