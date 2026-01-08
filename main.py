@@ -25,3 +25,24 @@ def test_db():
         "connected": True,
         "data": response.data
     }
+
+from pydantic import BaseModel
+
+class UserCreate(BaseModel):
+    nome: str
+    idade: int
+    doenca: str
+
+@app.post("/users")
+def create_user(user: UserCreate):
+    response = supabase.table("users").insert({
+        "nome": user.nome,
+        "idade": user.idade,
+        "doenca": user.doenca
+    }).execute()
+
+    return {
+        "success": True,
+        "user": response.data
+    }
+
