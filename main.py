@@ -79,6 +79,52 @@ def get_user_by_id(user_id: str):
         "success": True,
         "user": response.data[0]
     }
+class CheckinCreate(BaseModel):
+    user_id: str
+    glicemia: int
+    dor: int
+    fadiga: int
+    falta_ar: bool = False
+
+def calcular_risco(glicemia: int, dor: int, fadiga: int, falta_ar: bool) -> str:
+    pontos = 0
+    if glicemia > 250:
+        pontos += 3
+    if dor >= 7:
+        pontos += 2
+    if fadiga >= 7:
+        pontos += 2
+    if falta_ar:
+        pontos += 3
+
+    if pontos >= 6:
+        return "ALTO"
+    if pontos >= 3:
+        return "MEDIO"
+    return "BAIXO"
+
+@app.post("/checkins")
+def create_checkin(payload: CheckinCreate):
+    risco = calcular_risco(payload.glicemia, payload.dor, payload.fadiga, payload.falta_ar)
+
+    # opcional: validar se user existe
+    user = supabase.table("users").select("id").eq("id", payload.user_id).limit(1).execute()
+    if not user.data:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+
+    inserted = supabase.table("checkins").insert({
+        "user_id": payload.user_id,
+        "glicemia": payload.glicemia,
+        "dor": payload.dor,
+        "fadiga": payload.fadiga,
+        "falta_ar": payload.falta_ar,
+    }).execute()
+
+    return {
+        "success": True,
+        "risco": risco,
+        "checkin": inserted.data[0] if inserted.data else None
+    }
 
 
 
